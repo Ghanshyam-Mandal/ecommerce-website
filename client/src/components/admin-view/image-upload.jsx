@@ -1,14 +1,18 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { FileIcon, UploadCloudIcon, XIcon } from 'lucide-react';
 import { Button } from '../ui/button';
+import axios from 'axios';
+import { Skeleton } from '../ui/skeleton';
 
 function ProductImageUpload({
   imageFile,
   setImageFile,
   uploadedImageUrl,
   setUploadedImageUrl,
+  setImageLoadingState,
+  imageLoadingState,
 }) {
   const inputRef = useRef(null);
   function handleImageFileChange(event) {
@@ -30,6 +34,23 @@ function ProductImageUpload({
       inputRef.current.value = '';
     }
   }
+  async function uploadImgageToCloudinary() {
+    setImageLoadingState(true);
+    const data = new FormData();
+    data.append('my_file', imageFile);
+    const response = await axios.post(
+      'http://localhost:3000/api/admin/products/upload-image',
+      data
+    );
+    console.log(response.data);
+    if (response?.data?.success) {
+      setUploadedImageUrl(response.data.result.url);
+      setImageLoadingState(false);
+    }
+  }
+  useEffect(() => {
+    if (imageFile !== null) uploadImgageToCloudinary();
+  }, [imageFile]);
   return (
     <div className='w-full max-w-md mx-auto mt-4'>
       <Label className='text-lg font-semibold mb-2 block'>Upload image</Label>
@@ -53,6 +74,8 @@ function ProductImageUpload({
             <UploadCloudIcon className='w-10 h-10 text-muted mb-2' />
             <span>Drag & drop or click to upload image</span>
           </Label>
+        ) : imageLoadingState ? (
+          <Skeleton className='h-10 bg-gray-100' />
         ) : (
           <div className='flex items-center justify-between'>
             <div className='flex items-center'>
