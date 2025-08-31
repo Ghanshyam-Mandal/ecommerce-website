@@ -3,11 +3,39 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { useToast } from '@/hooks/use-toast';
+import { addToCart, fetchCartItems } from '@/store/shop/cart-slice';
+import { setProductDetails } from '@/store/shop/product-slice';
 import { StarIcon } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
 
 function ProductDetailsDialog({ open, setOpen, productDetails }) {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const { toast } = useToast();
+
+  function handleAddToCart(getCurrentProductId) {
+    dispatch(
+      addToCart({
+        userId: user?.id,
+        productId: getCurrentProductId,
+        quantity: 1,
+      })
+    ).then((data) => {
+      if (data?.payload.success) {
+        dispatch(fetchCartItems(user?.id));
+        toast({
+          title: 'Product added successfully',
+        });
+      }
+    });
+  }
+  function handleDialogClose() {
+    setOpen(false);
+    dispatch(setProductDetails());
+  }
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className='grid grid-cols-2 gap-8 sm:p-12 max-w-[90vw] sm:max-w-[80vw] lg:max-w-[70vw]'>
         <div className='relative overflow-hidden'>
           <img
@@ -28,7 +56,7 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
           <div className='flex items-center justify-between'>
             <p
               className={`text-3xl font-bold text-primary ${
-                productDetails.salePrice > 0 ? 'line-through' : ''
+                productDetails?.salePrice > 0 ? 'line-through' : ''
               }`}
             >
               {productDetails?.price}
@@ -50,7 +78,12 @@ function ProductDetailsDialog({ open, setOpen, productDetails }) {
             <span className='text-muted-foreground'>(4.5)</span>
           </div>
           <div className='mt-5 mb-5'>
-            <Button className='w-full'>Add to Cart</Button>
+            <Button
+              onClick={() => handleAddToCart(productDetails?._id)}
+              className='w-full'
+            >
+              Add to Cart
+            </Button>
           </div>
           <Separator />
           <div className='max-h-[300px] overflow-auto'>

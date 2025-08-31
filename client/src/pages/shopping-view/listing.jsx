@@ -18,6 +18,8 @@ import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { createSearchParams, useSearchParams } from 'react-router-dom';
 import ProductDetailsDialog from './product-details';
+import { addToCart, fetchCartItems } from '@/store/shop/cart-slice';
+import { useToast } from '@/hooks/use-toast';
 
 function createSearchParamsHelper(filterParams) {
   const queryParams = [];
@@ -36,10 +38,14 @@ function ShoppingListing() {
   const { productList, productDetails } = useSelector(
     (state) => state.shopProducts
   );
+  const { user } = useSelector((state) => state.auth);
+  const { cartItems } = useSelector((state) => state.shopCart);
   const [filters, setFilters] = useState({});
   const [sort, setSort] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
+  const { toast } = useToast();
+  const categorySearchParam = searchParams.get('category')
   function handleSort(value) {
     setSort(value);
   }
@@ -62,11 +68,27 @@ function ShoppingListing() {
     setFilters(cpyFilters);
     sessionStorage.setItem('filters', JSON.stringify(cpyFilters));
   }
+  function handleAddtoCart(getCurrentProductId) {
+    dispatch(
+      addToCart({
+        userId: user?.id,
+        productId: getCurrentProductId,
+        quantity: 1,
+      })
+    ).then((data) => {
+      if (data?.payload.success) {
+        dispatch(fetchCartItems(user?.id));
+        toast({
+          title: 'Product added successfully',
+        });
+      }
+    });
+  }
 
   useEffect(() => {
     setSort('price-lowtohigh');
     setFilters(JSON.parse(sessionStorage.getItem('filters')) || {});
-  }, []);
+  }, [categorySearchParam]);
   useEffect(() => {
     if (filters && Object.keys(filters).length > 0) {
       const createQueryString = createSearchParamsHelper(filters);
@@ -88,8 +110,6 @@ function ShoppingListing() {
   useEffect(() => {
     if (productDetails !== null) setOpenDetailsDialog(true);
   }, [productDetails]);
-
-  console.log(productDetails);
 
   return (
     <div className='grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 p-4 md:p-6'>
@@ -132,6 +152,7 @@ function ShoppingListing() {
             ? productList.map((productItem) => (
                 <ShoppingProductTile
                   handleGetProductDetails={handleGetProductDetails}
+                  handleAddtoCart={handleAddtoCart}
                   product={productItem}
                   key={productItem.title}
                 />
