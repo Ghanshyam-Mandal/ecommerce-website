@@ -49,7 +49,7 @@ function App() {
           <Route path='register' element={<AuthRegister />} />
         </Route>
         <Route
-          path='/admin'
+          path='/'
           element={
             <CheckAuth isAuthenticated={isAuthenticated} user={user}>
               <AdminLayout />
@@ -74,7 +74,7 @@ function App() {
           <Route path='checkout' element={<ShoppingCheckout />} />
           <Route path='account' element={<ShoppingAccount />} />
           <Route path='paypal-return' element={<PaypalReturnPage />} />
-          <Route path='payment-success' element={<PaymentSuccessPage/>}/>
+          <Route path='payment-success' element={<PaymentSuccessPage />} />
         </Route>
         <Route path='/unauth-page' element={<UnauthPage />}></Route>
         <Route path='*' element={<NotFound />}></Route>
@@ -84,5 +84,3 @@ function App() {
 }
 
 export default App;
-
-// timestamp: 9:48
